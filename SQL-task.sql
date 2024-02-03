@@ -107,3 +107,27 @@ WITH CTE AS (
 DELETE FROM CTE WHERE RowNum > 1;
 
 SELECT* FROM #PatientMeds;
+
+-- Merged the above 2 temp tables to create a final table with all the necessary filters applied.
+SELECT * FROM (
+    SELECT 
+        registration_guid,
+        patient_id, 
+        full_name, 
+        postcode, 
+        age, 
+        gender
+    FROM #PatientObs
+
+    UNION ALL
+
+    SELECT 
+        registration_guid,
+        patient_id, 
+        full_name,  
+        postcode, 
+        age, 
+        gender
+    FROM #PatientMeds
+    WHERE postcode = 'LS16 5XV'
+) AS FinalList;
