@@ -20,22 +20,34 @@ SELECT
 INTO #PatientObs
 FROM dbo.observation
 FULL OUTER JOIN dbo.patient ON dbo.observation.registration_guid = dbo.patient.registration_guid
+
+-- Getiing Asthma patients
 WHERE dbo.observation.snomed_concept_id IN (
     SELECT snomed_concept_id
     FROM dbo.clinical_codes
     WHERE refset_simple_id = 999012891000230104
-)AND dbo.patient.postcode = 'LS99 9ZZ'
+)
+-- Filtering patients according to the top postcode from part 1
+AND dbo.patient.postcode = 'LS99 9ZZ'
+
+-- Exluding somkers
 AND dbo.observation.snomed_concept_id NOT IN (
         SELECT snomed_concept_id
         FROM dbo.clinical_codes
         WHERE refset_simple_id = '999004211000230104'
     )
+
+-- Excluding patients that weigh less than 40kg 
 AND snomed_concept_id NOT IN (27113001)
+
+-- Excluding patients that have COPD diagnosis
 AND dbo.observation.snomed_concept_id NOT IN (
         SELECT snomed_concept_id
         FROM dbo.clinical_codes
         WHERE refset_simple_id = '999011571000230107'
     )
+
+-- Getting patients that have not opted out of taking part in the research
 AND dbo.observation.opt_out_9nu0_flag = 'FALSE';
 
 -- Used common table expression to remove duplicates from the PatientObs table
@@ -108,7 +120,14 @@ DELETE FROM CTE WHERE RowNum > 1;
 
 SELECT* FROM #PatientMeds;
 
--- Merged the above 2 temp tables to create a final table with all the necessary filters applied.
+-- Getting top postcodes from PatientMeds table
+SELECT postcode, gender, COUNT(patient_id) AS PatientCount
+FROM #PatientMeds
+GROUP BY postcode, gender
+ORDER BY PatientCount DESC;
+
+-- Merged the above 2 temp tables to create a final table 
+-- Filtered for the top postcode (LS16 5XV) from PatientMeds table
 SELECT * FROM (
     SELECT 
         registration_guid,
