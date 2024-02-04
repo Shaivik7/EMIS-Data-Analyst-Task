@@ -1,5 +1,5 @@
 -- Part 1
--- Getting patient counts across different postcodes and grouping them by with gender and postcode to identify most suitable postcodes
+-- Getting patient counts across different postcodes and grouping them with gender and postcode to identify most suitable postcodes
 SELECT postcode, gender, COUNT(patient_id) AS PatientCount
 FROM dbo.patient
 GROUP BY postcode, gender
@@ -25,8 +25,11 @@ FULL OUTER JOIN dbo.patient ON dbo.observation.registration_guid = dbo.patient.r
 WHERE dbo.observation.snomed_concept_id IN (
     SELECT snomed_concept_id
     FROM dbo.clinical_codes
-    WHERE refset_simple_id = 999012891000230104
+    WHERE refset_simple_id = '999012891000230104'
 )
+-- Filtering patients that have not resolved Asthma yet
+AND dbo.observation.regular_and_current_active_flag = 'True'
+
 -- Filtering patients according to the top postcode from part 1
 AND dbo.patient.postcode = 'LS99 9ZZ'
 
@@ -93,6 +96,8 @@ AND dbo.medication.snomed_concept_id NOT IN (
         FROM dbo.clinical_codes
         WHERE refset_simple_id = '999004211000230104'
     )
+-- Filtering for active patients
+AND fhir_medication_status = 'active'
 
 -- Excluding patients that weigh less than 40kg 
 AND snomed_concept_id NOT IN (27113001)
